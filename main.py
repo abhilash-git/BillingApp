@@ -2,7 +2,7 @@ from tkinter import *
 from os import walk
 
 window = Tk()
-window.geometry("800x500")
+window.geometry("875x500")
 
 
 class ItemClass:
@@ -27,7 +27,7 @@ class ItemClass:
         return self.quantity.get()
 
     def resetQuantity(self):
-        self.quantity.delete(0,"end")
+        self.quantity.delete(0, "end")
 
 
 class MenuCard:
@@ -48,16 +48,19 @@ class MenuCard:
 
         self.BillNo = 1000
 
-    def getNextBillNo(self):
+    def getLastBillNo(self):
         for i in walk(self.myBillpath):
             for file in i[2]:
                 if file.split("_")[0] == "BILL":
                     if int(float(file.split("_")[1].strip(".txt"))) > int(self.BillNo):
                         self.BillNo = int(float(file.split("_")[1].strip(".txt")))
-        return self.BillNo + 1;
+        return self.BillNo;
+
+    def getNextBillNo(self):
+        return self.getLastBillNo() + 1
 
     def getNextBillName(self):
-        return '{}\\BILL_{}.txt'.format(self.myBillpath,self.getNextBillNo())
+        return '{}\\BILL_{}.txt'.format(self.myBillpath, self.getNextBillNo())
 
     def UpdateLocation(self, x, y):
         self.X_loc = x
@@ -76,16 +79,15 @@ class MenuCard:
     def resetItemQuantity(self):
         for item in MenuCard.obj:
             item.resetQuantity()
-            obj=[]
             self.clearSummary()
+            obj = []
 
     def clearSummary(self):
         xxx = 550
         yyy = 300
-        label = Label(window, text='                                         .', font="Courier 12 ")
-        for i in range(yyy,500,10):
-            label.place(x=xxx, y=i)
-
+        for clear_loc in range(yyy, 500, 10):
+            label = Label(window, text="                                   ", font="Courier 12 ")
+            label.place(x=xxx, y=clear_loc)
 
     def Summary(self):
         xxx = 550
@@ -93,11 +95,11 @@ class MenuCard:
         label = Label(window, text='Bill NO: {}'.format(self.getNextBillNo()), font="Courier 12 ")
         label.place(x=xxx, y=yyy)
         yyy = yyy + 30
-        sumofEach = []
+        sumof_each = []
         for i in MenuCard.obj:
-            sumofEach.append(int(i.getQuantity()) * int(i.getCost()))
+            sumof_each.append(int(i.getQuantity()) * int(i.getCost()))
             text2fillAgain = '{} {} x Rs.{} = Rs.{} '.format(str(i.getName()), int(i.getQuantity()), int(i.getCost()),
-                                                       int(i.getQuantity()) * int(i.getCost()))
+                                                             int(i.getQuantity()) * int(i.getCost()))
             label = Label(window, text=text2fillAgain, font="Courier 12 ")
             label.place(x=xxx, y=yyy)
             yyy = yyy + 20
@@ -105,12 +107,11 @@ class MenuCard:
         label = Label(window, text="---------------------", font="Courier 12 ")
         label.place(x=xxx, y=yyy)
         yyy = yyy + 20
-        label = Label(window, text='Total      Rs.{}'.format(str(sum(sumofEach))), font="Courier 12 ")
+        label = Label(window, text='Total      Rs.{}'.format(str(sum(sumof_each))), font="Courier 12 ")
         label.place(x=xxx, y=yyy)
         yyy = yyy + 20
         label = Label(window, text="---------------------", font="Courier 12 ")
         label.place(x=xxx, y=yyy)
-
 
 
 # ==========================
@@ -165,23 +166,33 @@ print(MenuCard.obj)
 for i in listofitems:
     i.printItem()
 
+def cleanExit():
+    window.destroy()
 
 def createBill():
-    sumofEach=[]
-    curr_file=a.getNextBillName()
-    with open(curr_file, "x") as writer:
-        writer.write("BILL NO:"+str(a.getNextBillNo())+"\n")
-        for i in MenuCard.obj:
-            sumofEach.append(int(i.getQuantity()) * int(i.getCost()))
-            text2fillAgain = '{} {} x Rs.{} = Rs.{}  {}'.format(str(i.getName()), int(i.getQuantity()), int(i.getCost()),
-                                                       int(i.getQuantity()) * int(i.getCost()),"\n")
-            writer.write(text2fillAgain)
-        writer.write("---------------------\n")
-        text='Total      {} {}'.format(str(sum(sumofEach)),"\n")
-        writer.write(text)
-        writer.write("---------------------\n")
-    print("Bill written {}".format(curr_file))
-    a.resetItemQuantity()
+    sumofEach = []
+    q_in_list=sum([int(i.getQuantity()) for i in MenuCard.obj])
+    if q_in_list>0:
+        curr_file = a.getNextBillName()
+        with open(curr_file, "x") as writer:
+            writer.write("BILL NO:" + str(a.getNextBillNo() - 1) + "\n");
+            for i in MenuCard.obj:
+                sumofEach.append(int(i.getQuantity()) * int(i.getCost()));
+                text2fillAgain = '{} {} x Rs.{} = Rs.{}  {}'.format(str(i.getName()), int(i.getQuantity()),
+                                                                    int(i.getCost()),
+                                                                    int(i.getQuantity()) * int(i.getCost()), "\n");
+                writer.write(text2fillAgain);
+            writer.write("---------------------\n");
+            text = 'Total      {} {}'.format(str(sum(sumofEach)), "\n");
+            writer.write(text);
+            writer.write("---------------------\n");
+        print("Bill written {}".format(curr_file));
+        a.resetItemQuantity();
+    else:
+        print("Nothing to Bill")
+
+
+
 
 
 
@@ -191,5 +202,7 @@ b1.place(x=100, y=350)
 b2 = Button(window, text="Summary", width=20, command=a.Summary)
 b2.place(x=100, y=400)
 
+b3 = Button(window, text="Exit", width=20, command=cleanExit)
+b3.place(x=100, y=450)
 
 window.mainloop()
